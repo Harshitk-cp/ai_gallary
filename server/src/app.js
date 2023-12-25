@@ -8,7 +8,7 @@ import apiRoutes from "./routes/api.js";
 import { notFound, errorHandler } from "./middlewares/error.js";
 import { LOG_LEVEL } from "./utils/enums.js";
 import Logger from "./logger.js";
-config();
+config({ path: "./../.env" });
 Logger.setLevel(LOG_LEVEL.DEBUG);
 
 const app = express();
