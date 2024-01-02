@@ -1,41 +1,23 @@
-import jwt from "jsonwebtoken";
+import { verifyToken } from "../utils/generateTokens.js";
 import asyncHandler from "express-async-handler";
-import User from "../models/user.js";
 
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
+const authMiddleware = asyncHandler(async (req, res, next) => {
+  const bearerHeader = req.headers["authorization"];
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  if (typeof bearerHeader !== "undefined") {
+    const bearerToken = bearerHeader.split(" ")[1];
     try {
-      token = req.headers.authorization.split(" ")[1];
-      const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-
-      req.user = await User.findOne({ _id: decodedToken.id });
-
+      const decoded = verifyToken(bearerToken);
+      req.user = decoded;
       next();
     } catch (error) {
-      console.log(error.message);
       res.status(401);
-      throw new Error("no token, no auth");
+      throw new Error("Unauthorized");
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401);
-    throw new Error("no token, no auth");
+    throw new Error("Unauthorized");
   }
 });
 
-const employer = (req, res, next) => {
-  if (req.user && req.user.isEmployee) {
-    next();
-  } else {
-    res.status(401);
-    throw new Error("no token, no auth");
-  }
-};
-
-export { protect, employer };
+export default authMiddleware;
